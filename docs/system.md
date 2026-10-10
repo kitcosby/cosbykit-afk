@@ -90,9 +90,9 @@ flowchart TB
 | Store | Owning repo(s) | Key entities | Notes |
 |---|---|---|---|
 | bible.db (SQLite, read-only) | bible | 11 corpus tables, 264217 words | Frozen v1 corpus; superseded by bible-project |
-| bible_v2.db (SQLite, read-only) | bible-project | 24 normalized tables, 264217 words | v2 schema: books, verses, words, strongs (+components, sources), morph patterns/segments, root tiers, lexicon + 4 child tables, glosses, kjv_words, kjv_renderings, ylt_verses, ylt_renderings, word_alignment, word_variants, morph_variants. Live website still serves v1 pending Kit's schema review |
+| bible_v2.db (SQLite, read-only) | bible-project | 24 normalized tables, 264217 words | v2 schema: books, verses, words, strongs (+components, sources), morph patterns/segments, root tiers, lexicon + 4 child tables, glosses, kjv_words, kjv_renderings, ylt_verses, ylt_renderings, word_alignment, word_variants, morph_variants. Live website serves v2 since the Kit-authorized 2026-09-28 cutover (verified 200 on /bible) |
 | Derived alignment/variant rows | bible-project | word_alignment ~836k rows, word_variants ~528k rows, morph_variants 28 rows | Derived-data stage output; never alters base tables |
-| app.db (SQLite) | bible-project website | app_user, translation, other_option | Website writes; corpus stays read-only |
+| app.db (SQLite) | bible-project website | app_user, translation, other_option, user_accounts, lemma_default | Website writes; corpus stays read-only |
 | user_data choice files | bible-project website | one byte per word choices | Per-user translation decisions; byte offset = word_id - 1 |
 | Forum database | lampy-admin (forum app) | users, categories, threads, posts, forum_events, docs, forum_daily, mail_user_roles | Console borrows forum users table for auth |
 | Euclid vectors SQLite | euclid-proofs | 606 Elements chunks, FTS5 index | Embedded via Ollama for lookup |
@@ -122,6 +122,7 @@ erDiagram
     WORDS }o--|o STRONGS : tagged_with
     STRONGS ||--o{ GLOSSES : glossed_by
     APP_USER ||--o{ TRANSLATION : owns
+    USER_ACCOUNTS ||--o{ TRANSLATION : owns_as
     TRANSLATION }o--o{ WORDS : targets
     TRANSLATION ||--o{ OTHER_OPTION : adds
     FORUM_USER ||--o{ FORUM_POST : writes
@@ -281,7 +282,7 @@ Cross-database links (by design, not by foreign key):
   is the frozen v1 corpus and superseded; bible-project rebuilt it, extended
   it (U-8/U-9 repairs, YLT alignment, Flask website), and normalized it to
   the v2 schema. The v1 `bible.db` is retained as a frozen baseline; the live
-  website still serves v1 — v2 cutover awaits Kit's schema review.
+  website serves v2 since the 2026-09-28 cutover (verified live then).
 - `FORUM_USER` is shared: lampy-admin's console authenticates against the
   forum's users table rather than keeping its own account store.
 - `r-theory-rewrite -> lampy-admin`: the console pulls the site-dist branch and
@@ -322,8 +323,16 @@ Cross-database links (by design, not by foreign key):
 - OBSERVED: bible-project v2 normalization (`schema_v2.sql`, 24 tables,
   `schema_v2.md`): migration verification 2026-09-28 — 66.9 s over 264,217
   words, 0 FK violations, lexicon round-trips 0 mismatches on 126,869 rows;
-  `app_v2.py` staged on the laptop behind `/bible-v2` (port 5058), live
-  `/bible` still serves v1 — NO live cutover; Kit's schema review pending.
+  live cutover DONE 2026-09-28 ~17:15 PDT on Kit's authorization —
+  `app_v2.py` serves `/bible` live (verified 200); the pre-cutover `/bible-v2`
+  staging copy on port 5058 was observed 2026-09-28, its post-cutover role not
+  re-verified.
+- OBSERVED (bible-project commits 7b7b03e8 + f323dfca, 2026-10-06): the
+  website schema gained `user_accounts` (real logins: `/signup`, `/login`,
+  `/logout`) and `lemma_default` (sticky lemma-default choices);
+  `translation.owner_id` → user_accounts (NULL = legacy/anonymous).
+  `/variants` now serves only academic/textual variants (Kit 2026-10-01,
+  implemented — the 2026-10-03 revision's PENDING item).
 - OMITTED deliberately: the Facebook R Theory group, Tailscale, and Toetop host
   details are deployment/operations context, not repository architecture, and
   were not observed in the repos themselves.
