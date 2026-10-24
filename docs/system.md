@@ -2,12 +2,21 @@ Living document — update these diagrams when adding features.
 
 # cosbykit-afk — System-wide architecture
 
-Profile-level view of the 13-repo ecosystem: how the repositories relate to each other
-and to the outside world, and where the system's data actually lives.
+Profile-level view of the 15-repo maintained ecosystem: how the repositories relate to each other
+and to the outside world, and where the system's data actually lives. (The kitcosby account
+lists 16 repositories; `rtheory-` is an excluded archive snapshot, per Kit 2026-10-17.)
 
 Repo families: **Bible** (bible, bible-project), **R Theory** (r-theory-rewrite, R-Theory),
 **Lampy** (lampy-installer, lampy-admin, lampy-single, lampy-deps, lampy-temp-backup),
-**QA** (qa-ceg), **Research and ops** (euclid-proofs, genealogy, gwen-training).
+**QA** (qa-ceg), **Research and ops** (euclid-proofs, genealogy, gwen-training, geometry-first).
+
+**2026-10-24 revision:** geometry-first is a NEW repository (created 2026-10-08) — the
+geometry-first unification corpus (only PROVED/CHECKED results, a clean break from E8),
+added to the Research family below; it has no `docs/architecture.md` yet, and whether it
+joins the maintained-diagram set is Kit's decision (flagged in the 2026-10-24 run).
+Also updated: the bible-project website's PostgreSQL migration and variants campaign,
+the lampy-admin Windows dashboard, and lampy-installer v2 (including its new
+installer → bible-project Bible-website fetch).
 
 ## 1. System-wide context diagram
 
@@ -45,6 +54,7 @@ flowchart TB
         euclid["euclid-proofs"]
         genealogy["genealogy"]
         gwentrain["gwen-training"]
+        geofirst["geometry-first"]
     end
 
     Kit -->|"maintains"| BIBLEFAM
@@ -58,6 +68,8 @@ flowchart TB
 
     bible -->|"superseded by - corpus lineage"| bibleproj
     bibleproj -->|"translation website"| Readers
+    installer -->|"Bible website files on fresh install (v2)"| bibleproj
+    geofirst -->|"proved theorems, tables, and proof scripts"| GH
 
     rtrewrite -->|"research pages mirror"| rtheory
     rtrewrite -->|"site-dist branch for deploy"| admin
@@ -90,16 +102,18 @@ flowchart TB
 | Store | Owning repo(s) | Key entities | Notes |
 |---|---|---|---|
 | bible.db (SQLite, read-only) | bible | 11 corpus tables, 264217 words | Frozen v1 corpus; superseded by bible-project |
-| bible_v2.db (SQLite, read-only) | bible-project | 24 normalized tables, 264217 words | v2 schema: books, verses, words, strongs (+components, sources), morph patterns/segments, root tiers, lexicon + 4 child tables, glosses, kjv_words, kjv_renderings, ylt_verses, ylt_renderings, word_alignment, word_variants, morph_variants. Live website serves v2 since the Kit-authorized 2026-09-28 cutover (verified 200 on /bible) |
-| Derived alignment/variant rows | bible-project | word_alignment ~836k rows, word_variants ~528k rows, morph_variants 28 rows | Derived-data stage output; never alters base tables |
-| app.db (SQLite) | bible-project website | app_user, translation, other_option, user_accounts, lemma_default | Website writes; corpus stays read-only |
-| user_data choice files | bible-project website | one byte per word choices | Per-user translation decisions; byte offset = word_id - 1 |
+| bible_v2.db (SQLite, build corpus) | bible-project | 24 normalized tables, 264217 words, plus witness_verses and verse_notes | v2 schema: books, verses, words, strongs (+components, sources), morph patterns/segments, root tiers, lexicon + 4 child tables, glosses, kjv_words, kjv_renderings, ylt_verses, ylt_renderings, word_alignment, word_variants, morph_variants. The variant builders write this file; the website no longer reads it directly (see the PostgreSQL rows) |
+| bible (PostgreSQL) | bible-project website | corpus tables, word_variants (textual), witness_verses, verse_notes | Live corpus since the 2026-10-09 PostgreSQL migration; variants and verse-scale witness data synced from bible_v2.db by export_sync.py |
+| bible_app (PostgreSQL) | bible-project website | app_user, translation (with owner_id), other_option, user_accounts, lemma_default, word_choice, reading_position | Website writes; corpus stays read-only. word_choice (2026-10-09) replaced the user_data choice byte files |
+| Derived alignment/variant rows | bible-project | word_alignment, word_variants (spelling + textual: MT Kethiv/Qere, SP, DSS witnesses), morph_variants 28 rows | Derived-data stage output; textual variants added by the Oct 14–17 campaign (Kethiv/Qere, Samaritan, Dead Sea Scrolls; Syriac is verse-scale only) |
 | Forum database | lampy-admin (forum app) | users, categories, threads, posts, forum_events, docs, forum_daily, mail_user_roles | Console borrows forum users table for auth |
 | Euclid vectors SQLite | euclid-proofs | 606 Elements chunks, FTS5 index | Embedded via Ollama for lookup |
 | Claim ledger files | euclid-proofs | 493 proved, 79 checked, 209 asserted, 32 incomplete | Per-book claim files under trig_proof |
 | Public GEDCOM | genealogy | persons, families | Verified-only copy; private working file not published |
 | Change ledger | genealogy | applied research proposals | Two-track admission rulebook in verified/VERIFIED.md |
-| Installer manifest | lampy-installer | manifest.json, 7 signed chunks, install log | No persistent runtime data model |
+| Installer manifest | lampy-installer | manifest.json v2.0.0, 14 chunks (file key, derived tarball), install log | No persistent runtime data model; v2 installer also builds PostgreSQL from source, sets up the forum database, and fetches the Bible website from bible-project |
+| Windows dashboard state | lampy-admin | none (in-memory HTTP serving) | lampy-admin-win.ps1 (2026-10-13): Windows-side dashboard on 127.0.0.1:8899, commands via wsl.exe, psql via the distro; owns no database |
+| Theorem and table files | geometry-first | 27 PROVED theorems (theorems/INDEX.md), validated tables, Sage proof scripts, Pascal layer | No database; only PROVED/CHECKED content, clean break from E8 (created 2026-10-08) |
 | Document tree | r-theory-rewrite | books, sections, figures, claims | Static site source; structure modeled, no database |
 | Research mirror files | R-Theory | 3 HTML pages, 6 CSV/JSON tables | Backup mirror of r-theory-rewrite research pages |
 | Build context | lampy-single | Dockerfile, supervisord conf, forum source | Produces container image; no runtime data |
@@ -275,9 +289,19 @@ qa-ceg model entities).
 
 Cross-database links (by design, not by foreign key):
 - `TRANSLATION.targets -> WORDS`: the bible-project website writes user
-  translations against the read-only corpus. Corpus (`bible_v2.db`) and
-  website data (`app.db`) are separate SQLite files by design; choice files
-  index by `word_id` at byte offset `word_id - 1`.
+  translations against the read-only corpus. Since 2026-10-09 the corpus
+  lives in the PostgreSQL `bible` database and website data in the
+  PostgreSQL `bible_app` database; per-word choices are `word_choice` rows
+  (sparse, absent = choice 0), not byte files.
+- `lampy-installer -> bible-project`: since installer v2.0.0 (2026-10-07/10),
+  a fresh install fetches the current Bible website files (`app_v2.py`,
+  `papyrus-tile.png`) from `kitcosby/bible-project` (master, website/)
+  into the distro — the installer now depends on bible-project, not only
+  on its own release chunks.
+- `geometry-first` stands apart from the R Theory family by design: it is
+  the clean-break, proved-only corpus (native operators, no E8) and does
+  not feed r-theory-rewrite; the trigonometry/manuscript audit continues
+  in r-theory-rewrite separately.
 - `bible.bible.db -> bible-project.bible_v2.db`: lineage only. The bible copy
   is the frozen v1 corpus and superseded; bible-project rebuilt it, extended
   it (U-8/U-9 repairs, YLT alignment, Flask website), and normalized it to
@@ -333,6 +357,28 @@ Cross-database links (by design, not by foreign key):
   `translation.owner_id` → user_accounts (NULL = legacy/anonymous).
   `/variants` now serves only academic/textual variants (Kit 2026-10-01,
   implemented — the 2026-10-03 revision's PENDING item).
+- OBSERVED (2026-10-24 run, bible-project HEAD 18ef982a): website migrated
+  to PostgreSQL (`bible` corpus + `bible_app` app data, psycopg2, Kit
+  2026-10-09, administrable via the Lampy admin tool); `word_choice`
+  normalized table replaced the choice byte files; `reading_position`
+  and the two-doors `/read` redesign landed; the variants campaign added
+  MT/SP/DSS textual rows to `word_variants` and the Syriac verse-scale
+  tables `witness_verses`/`verse_notes`, synced to PostgreSQL by
+  `export_sync.py`. The 2026-10-10 architecture-docs commit for the login
+  system was lost in the 2026-10-18 lineage merge; the per-repo doc was
+  restored and extended in the same 2026-10-24 run.
+- OBSERVED (2026-10-24 run): lampy-admin gained `lampy-admin-win.ps1`
+  (Windows dashboard, 127.0.0.1:8899, 12-concurrent runspace pool,
+  wsl.exe + psql administration, 2026-10-13); lampy-installer v2.0.0 is
+  the production installer (14 chunks, client-side PostgreSQL build,
+  forum setup, Bible-website fetch from bible-project).
+- OBSERVED (2026-10-24 run): `geometry-first` (created 2026-10-08,
+  public, "Geometry-first unification: only proven theorems, tables, and
+  documents. Clean break from E8.") is a new repository on the kitcosby
+  account — the account now lists 16 repos, of which 15 are maintained
+  and `rtheory-` remains the excluded archive. geometry-first has no
+  `docs/architecture.md` (GET returned 404); adding it to the maintained
+  diagram set needs Kit's decision.
 - OMITTED deliberately: the Facebook R Theory group, Tailscale, and Toetop host
   details are deployment/operations context, not repository architecture, and
   were not observed in the repos themselves.
