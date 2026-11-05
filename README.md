@@ -81,7 +81,7 @@ Text-based SAD documentation (Mermaid) for the ecosystem:
   - [Bible](https://github.com/kitcosby/Bible/blob/main/docs/architecture.md)
   - [R-Theory](https://github.com/kitcosby/R-Theory/blob/main/docs/architecture.md)
   - [bible-project](https://github.com/kitcosby/bible-project/blob/master/docs/architecture.md)
-  - [euclid-proofs](https://github.com/kitcosby/euclid-proofs/blob/main/docs/architecture.md)
+  - [euclid-proofs](https://github.com/kitcosby/euclid-proofs) — proof archive and claim ledgers (no architecture.md currently published)
   - [genealogy](https://github.com/kitcosby/genealogy/blob/main/docs/architecture.md)
   - [gwen-training](https://github.com/kitcosby/gwen-training/blob/main/docs/architecture.md)
   - [lampy-admin](https://github.com/kitcosby/lampy-admin/blob/main/docs/architecture.md)
