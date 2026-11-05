@@ -63,4 +63,4 @@ This is an ownership and purpose map, not a claim that every repository is equal
 
 ## Snapshot limitations
 
-This inventory is based on repository metadata, root file listings, selected READMEs, branch lists, and recent commit metadata checked on 2026-11-04. It is not a full content-hash comparison, dependency audit, branch ancestry audit, or deployment verification. Recommendations marked as candidates require those checks before action.
+This inventory is based on repository metadata, recursive file-tree listings, selected READMEs, targeted Git-tree comparisons, and branch/commit checks for the repositories specifically reviewed on 2026-11-04. It is not a full account-wide branch ancestry audit, dependency audit, or deployment verification. Recommendations marked as candidates require those checks before action.
