@@ -22,8 +22,8 @@ This is an ownership and purpose map, not a claim that every repository is equal
 |---|---|---|
 | [bible-project](https://github.com/kitcosby/bible-project) | Current Bible corpus, database/build tooling, website source, and research | **Canonical current project** |
 | [Bible](https://github.com/kitcosby/Bible) | Earlier partial copy of the Bible corpus/build work | Historical copy; candidate for archival after unique files and history are checked |
-| [BibleApp](https://github.com/kitcosby/BibleApp) | Private application repository with workspace/package structure | Retain; inspect its relationship to the PWA before considering consolidation |
-| [BibleApp-pwa](https://github.com/kitcosby/BibleApp-pwa) | Public static PWA implementation | Retain pending app-source and deployment comparison |
+| [BibleApp](https://github.com/kitcosby/BibleApp) | Private workspace monorepo containing a React/Vite translation app, API server, generated API client, and mockup sandbox | Retain as the richer workspace/application source; no path-level overlap with the static PWA was found |
+| [BibleApp-pwa](https://github.com/kitcosby/BibleApp-pwa) | Public nine-file static PWA: standalone `index.html`, manifest, icons, and offline service worker; reads the Lampy Bible API | Retain as a distinct static/offline delivery target; do not merge into the workspace monorepo without a migration plan |
 
 ## Lampy and operations
 
@@ -33,7 +33,7 @@ This is an ownership and purpose map, not a claim that every repository is equal
 | [lampy-installer](https://github.com/kitcosby/lampy-installer) | Windows/WSL installation and deployment tooling | Retain |
 | [lampy-single](https://github.com/kitcosby/lampy-single) | Docker-based single-container stack | Retain as a distinct deployment target |
 | [lampy-deps](https://github.com/kitcosby/lampy-deps) | Build dependency and large release assets | Retain; release assets are part of its purpose |
-| [lampy-temp-backup](https://github.com/kitcosby/lampy-temp-backup) | Large historical Lampy/forum-stack snapshot | Candidate for archival after restore value and unique files are verified |
+| [lampy-temp-backup](https://github.com/kitcosby/lampy-temp-backup) | 108-file historical Lampy/forum-stack snapshot with control-plane, DB-console, payments, and other legacy modules | Retain intact; contains substantial material not represented by current component repositories, so it is not yet safe to archive |
 | [gwen-training](https://github.com/kitcosby/gwen-training) | Gwen training materials and curriculum | Retain separately from runtime infrastructure |
 
 ## Other projects and account tooling
@@ -63,4 +63,4 @@ This is an ownership and purpose map, not a claim that every repository is equal
 
 ## Snapshot limitations
 
-This inventory is based on repository metadata, recursive file-tree listings, selected READMEs, targeted Git-tree comparisons, and branch/commit checks for the repositories specifically reviewed on 2026-11-04. It is not a full account-wide branch ancestry audit, dependency audit, or deployment verification. Recommendations marked as candidates require those checks before action.
+This inventory is based on repository metadata, recursive file-tree listings, selected READMEs, targeted Git blob comparisons, and branch/commit checks for the repositories specifically reviewed on 2026-11-04. The BibleApp comparison is structural; no live deployment or API integration test was run. This is not a full account-wide branch ancestry audit, dependency audit, or deployment verification.

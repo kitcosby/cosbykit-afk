@@ -2,13 +2,15 @@ Living document — update these diagrams when adding features.
 
 # cosbykit-afk — System-wide architecture
 
-Profile-level view of the 15-repo maintained ecosystem: how the repositories relate to each other
-and to the outside world, and where the system's data actually lives. (The kitcosby account
-lists 16 repositories; `rtheory-` is an excluded archive snapshot, per Kit 2026-10-17.)
+Profile-level view of the 18-repository `kitcosby` ecosystem as inventoried on 2026-11-04: how
+research, applications, infrastructure, and external services relate. Repository roles are not
+interchangeable: mirrors, historical snapshots, distinct deployment targets, and separate proof
+corpora remain identified as such.
 
-Repo families: **Bible** (bible, bible-project), **R Theory** (r-theory-rewrite, R-Theory),
-**Lampy** (lampy-installer, lampy-admin, lampy-single, lampy-deps, lampy-temp-backup),
-**QA** (qa-ceg), **Research and ops** (euclid-proofs, genealogy, gwen-training, geometry-first).
+Repo families: **Bible corpus** (Bible, bible-project), **Bible applications** (BibleApp, BibleApp-pwa),
+**R Theory** (r-theory-rewrite, R-Theory, rtheory-), **Lampy** (lampy-installer, lampy-admin,
+lampy-single, lampy-deps, lampy-temp-backup), **QA** (qa-ceg), and **Research/ops**
+(euclid-proofs, genealogy, gwen-training, geometry-first). `cosbykit-afk` holds this ecosystem documentation.
 
 **2026-10-24 revision:** geometry-first is a NEW repository (created 2026-10-08) — the
 geometry-first unification corpus (only PROVED/CHECKED results, a clean break from E8),
@@ -20,7 +22,7 @@ installer → bible-project Bible-website fetch).
 
 ## 1. System-wide context diagram
 
-The 13 repositories as subsystems, with external entities and the data flows between them.
+The repository subsystems, with external entities and the data flows between them.
 Dotted flows are intended or not-directly-observed links (see Grounding notes).
 
 ```mermaid
@@ -32,9 +34,13 @@ flowchart TB
     SRC["Public data sources"]
     OLL["Ollama model distribution"]
 
-    subgraph BIBLEFAM["Bible family"]
-        bible["bible"]
+    subgraph BIBLEFAM["Bible corpus"]
+        bible["Bible (historical copy)"]
         bibleproj["bible-project"]
+    end
+    subgraph BIBLEAPPS["Bible applications"]
+        bibleapp["BibleApp (private React/API workspace)"]
+        byotpwa["BibleApp-pwa (static offline PWA)"]
     end
     subgraph RTFAM["R Theory family"]
         rtrewrite["r-theory-rewrite"]
@@ -68,6 +74,9 @@ flowchart TB
 
     bible -->|"superseded by - corpus lineage"| bibleproj
     bibleproj -->|"translation website"| Readers
+    bibleapp -->|"workspace application and API"| Readers
+    byotpwa -->|"static/offline translation client"| Readers
+    byotpwa -->|"read-only /bible/api GETs"| admin
     installer -->|"Bible website files on fresh install (v2)"| bibleproj
     geofirst -->|"proved theorems, tables, and proof scripts"| GH
 
