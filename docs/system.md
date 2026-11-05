@@ -20,7 +20,7 @@ installer → bible-project Bible-website fetch).
 
 ## 1. System-wide context diagram
 
-The 13 repositories as subsystems, with external entities and the data flows between them.
+The repository subsystems, with external entities and the data flows between them.
 Dotted flows are intended or not-directly-observed links (see Grounding notes).
 
 ```mermaid
@@ -67,7 +67,7 @@ flowchart TB
     SRC -->|"public source material"| genealogy
 
     bible -->|"superseded by - corpus lineage"| bibleproj
-    bibleproj -->|"translation website"| Readers
+    bibleproj -->|"translation website"| Readers\n    bibleapp -->|"workspace application and API"| Readers\n    byotpwa -->|"static/offline translation client"| Readers\n    byotpwa -->|"read-only /bible/api GETs"| admin
     installer -->|"Bible website files on fresh install (v2)"| bibleproj
     geofirst -->|"proved theorems, tables, and proof scripts"| GH
 
