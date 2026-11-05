@@ -123,11 +123,11 @@ flowchart TB
 | Installer manifest | lampy-installer | manifest.json v2.0.0, 14 chunks (file key, derived tarball), install log | No persistent runtime data model; v2 installer also builds PostgreSQL from source, sets up the forum database, and fetches the Bible website from bible-project |
 | Windows dashboard state | lampy-admin | none (in-memory HTTP serving) | lampy-admin-win.ps1 (2026-10-13): Windows-side dashboard on 127.0.0.1:8899, commands via wsl.exe, psql via the distro; owns no database |
 | Theorem and table files | geometry-first | 27 PROVED theorems (theorems/INDEX.md), validated tables, Sage proof scripts, Pascal layer | No database; only PROVED/CHECKED content, clean break from E8 (created 2026-10-08) |
-| Document tree | r-theory-rewrite | books, sections, figures, claims | Static site source; structure modeled, no database |
+| BibleApp workspace | BibleApp (private) | React/Vite translation client, API server, generated API client, mockup sandbox | Separate workspace monorepo; live deployment and database wiring not verified in this audit |\n| BibleApp static PWA | BibleApp-pwa | Browser-local rendering choices; service-worker caches for app shell and successful JSON API responses | Static/offline client; GET-only `/bible/api` integration documented in its README |\n| Document tree | r-theory-rewrite | books, sections, figures, claims | Static site source; structure modeled, no database |
 | Research mirror files | R-Theory | 3 HTML pages, 6 CSV/JSON tables | Backup mirror of r-theory-rewrite research pages |
 | Build context | lampy-single | Dockerfile, supervisord conf, forum source | Produces container image; no runtime data |
 | Dependency release assets | lampy-deps | build-deps-v1 release: 7 assets (~7.8 GiB) | wheelhouse.tar.part00-02 + ollama-donor.tar.part00-03; git tree holds only README + docs |
-| Code snapshot | lampy-temp-backup | 134-entry working tree plus tarball | Static backup, verified 2026-09-21 |
+| Code snapshot | lampy-temp-backup | 108 tracked files on 2026-11-04, including control-plane, DB-console, payments, installer, and legacy modules | Historical snapshot; substantial unique material remains to be reviewed before any archival decision |
 | Curriculum docs | gwen-training | lesson plan, lessons, prompts | No persistent data model |
 | CEG model files | qa-ceg | ceg/*.ceg graphs: inputs, effects, requirements | One graph per product: r-theory-rewrite, forum, lampy-installer, bible-project, profile |
 | Generated test suites | qa-ceg | suites/*.tests.md (published), *.tests.json (private) | ceg.py enumerates all combos; exit code = uncovered requirement count |
